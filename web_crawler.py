@@ -89,7 +89,7 @@ def crawl(url, crawled_urls, media_urls,browser):
                 res = browser.open(website+link)
 
                 # Make sure it is a webpage
-                if res.headers['Content-Type'] == 'text/html':
+                if 'text/html' in res.headers['Content-Type']:
                     crawled_urls.add(link)
                     crawl(website+link,crawled_urls, media_urls,browser)
                 else:
@@ -161,6 +161,6 @@ def exportData(data):
     f.close()
 
 if __name__ == '__main__':
-    website = "https://www.iitdh.ac.in/"
+    website = "https://www.iitb.ac.in/"
     crawlWebsite(website)
     scrapeWebsite(website)
