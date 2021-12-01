@@ -109,11 +109,6 @@ def scrapeWebsite(url):
 
     for result in myresult:
         data = scrape(url,result['paths'])
-        data_entry = {
-            "url": url,
-            "data": data,
-            "scrapped_at": str(datetime.datetime.now())
-        }
 
         # Store in MongoDB
         # mycol = mydb["page_data"]
@@ -121,7 +116,7 @@ def scrapeWebsite(url):
         # mycol.update_one(myquery, { "$set": data_entry }, upsert=True)
 
         # Export as json
-        exportData(data_entry)
+        exportData(data)
 
 # Scrape data from all paths for a given site
 def scrape(url,paths):
@@ -143,7 +138,7 @@ def scrape(url,paths):
 
         # Add data to array
         page_data = {
-                "path" : path,
+                "path" : website+path,
                 "data" : text
             }
         data.append(page_data)
@@ -161,6 +156,6 @@ def exportData(data):
     f.close()
 
 if __name__ == '__main__':
-    website = "https://www.iitb.ac.in/"
-    crawlWebsite(website)
+    website = "https://www.iitdh.ac.in/"
+    # crawlWebsite(website)
     scrapeWebsite(website)
