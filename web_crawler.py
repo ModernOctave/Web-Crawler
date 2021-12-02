@@ -8,13 +8,89 @@ MONGODB_URL = "mongodb://localhost:27017/"
 
 # Crawl a given website
 def crawlWebsite(url):
+    # Crawl starting from given url
+    def crawl(url):
+        print("Media URLs: "+str(len(media_urls))+"   Crawled Pages: "+str(len(crawled_urls))+"   Crawling: "+url)
+
+        # Open the url
+        browser.open(url)
+
+        # Get all links
+        links = browser.links()
+
+        # Strip any whitespace
+        links = list(link['href'].strip() for link in links)
+
+        # Ensure they are from the same website
+        links = list(link for link in links if (len(urlsplit(link).netloc) == 0) or (urlsplit(link).netloc == urlsplit(url).netloc))
+
+        # Only take http links
+        links = list(link for link in links if (urlsplit(link).scheme == '') or (urlsplit(link).scheme == 'https') or (urlsplit(link) == 'http'))
+
+        # Parse to get correct paths
+        for i in range(len(links)):
+            link = urlsplit(links[i]).path
+            if not link:
+                links[i] = link
+            elif link[0] == '/':
+                links[i] = link.strip('/')
+            elif link[0:2] == './':
+                root = urlsplit(url).path.strip("/")
+                if root:
+                    links[i] = root+link.strip('.')
+                else:
+                    links[i] = link.strip('./')
+            else:
+                url_split = urlsplit(url).path.split('/')
+                url_split = list(x for x in url_split if x)
+                url_root = '/'.join(url_split[0:len(url_split)-1])
+                if url_root:
+                    links[i] = url_root+'/'+link.strip('../')
+
+        # Remove any blank links
+        links = list(link for link in links if link)
+
+        # For each link not in urls
+        for link in links:
+            media = False
+
+            if (link not in crawled_urls) and (link not in to_crawl):
+                if link not in media_urls:
+                    for type in ['jpg', 'JPG', 'png', 'jpeg', 'pdf', 'gif']:
+                        if type in link:
+                            media_urls.add(link)
+                            media = True
+                    
+                    if media:
+                        continue
+                    
+                    # Open the url
+                    try:
+                        res = browser.open(website+link, timeout=15)
+                        # Make sure it is a webpage
+                        if 'text/html' in res.headers['Content-Type']:
+                            to_crawl.add(link)
+                        else:
+                            media_urls.add(link)
+                    except:
+                        print("Could not open "+website+link+" !")
+
     # Open browser
     browser = mechanicalsoup.StatefulBrowser()
 
     # Crawl the website
     crawled_urls = set()
     media_urls = set()
-    crawl(url, crawled_urls, media_urls, browser)
+    to_crawl = set()
+
+    to_crawl.add(urlsplit(url).path.strip("/"))
+
+    print("Crawling:")
+    while to_crawl:
+        for x in to_crawl.copy():
+            crawl(website+x)
+            to_crawl.remove(x)
+            crawled_urls.add(x)
 
     # Store the url data
     url_data = {
@@ -29,71 +105,6 @@ def crawlWebsite(url):
 
     myquery = { "url": url }
     mycol.update_one(myquery, { "$set": url_data }, upsert=True)
-
-# Crawl starting from given url
-def crawl(url, crawled_urls, media_urls,browser):
-    print(len(crawled_urls)+len(media_urls))
-
-    # Open the url
-    browser.open(url)
-
-    # Get all links
-    links = browser.links()
-
-    # Strip any whitespace
-    links = list(link['href'].strip() for link in links)
-
-    # Ensure they are from the same website
-    links = list(link for link in links if (len(urlsplit(link).netloc) == 0) or (urlsplit(link).netloc == urlsplit(url).netloc))
-
-    # Only take http links
-    links = list(link for link in links if (urlsplit(link).scheme == '') or (urlsplit(link).scheme == 'https') or (urlsplit(link) == 'http'))
-
-    # Parse to get correct paths
-    for i in range(len(links)):
-        link = urlsplit(links[i]).path
-        if not link:
-            links[i] = link
-        elif link[0] == '/':
-            links[i] = link.strip('/')
-        elif link[0:2] == './':
-            root = urlsplit(url).path.strip("/")
-            if root:
-                links[i] = root+link.strip('.')
-            else:
-                links[i] = link.strip('./')
-        else:
-            url_split = urlsplit(url).path.split('/')
-            url_split = list(x for x in url_split if x)
-            url_root = '/'.join(url_split[0:len(url_split)-1])
-            if url_root:
-                links[i] = url_root+'/'+link
-
-    # Remove any blank links
-    links = list(link for link in links if link)
-
-    # For each link not in urls
-    for link in links:
-        media = False
-        if link not in crawled_urls:
-            if link not in media_urls:
-                for type in ['jpg', 'JPG', 'png', 'jpeg', 'pdf', 'gif']:
-                    if type in link:
-                        media_urls.add(link)
-                        media = True
-                
-                if media:
-                    continue
-                
-                # Open the url
-                res = browser.open(website+link)
-
-                # Make sure it is a webpage
-                if 'text/html' in res.headers['Content-Type']:
-                    crawled_urls.add(link)
-                    crawl(website+link,crawled_urls, media_urls,browser)
-                else:
-                    media_urls.add(link)
 
 
             
@@ -156,6 +167,6 @@ def exportData(data):
     f.close()
 
 if __name__ == '__main__':
-    website = "https://www.iitdh.ac.in/"
-    # crawlWebsite(website)
-    scrapeWebsite(website)
+    website = "https://www.iitb.ac.in/"
+    crawlWebsite(website)
+    # scrapeWebsite(website)
