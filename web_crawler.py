@@ -157,12 +157,12 @@ def scrape(url,paths):
     return data
 
 def exportURLs(url_data):
-    f = open("urls.json", "w")
+    f = open("urls.json", "w", encoding='utf-8')
     f.write(json.dumps(url_data,indent=4))
     f.close()
 
 def exportData(data):
-    f = open("data.json", "w")
+    f = open("data.json", "w", encoding='utf-8')
     f.write(json.dumps(data,indent=4))
     f.close()
 
