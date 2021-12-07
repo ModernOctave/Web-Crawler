@@ -175,10 +175,24 @@ def exportData(website,data):
     f.close()
 
 def main(argv):
+    help_text = """
+    Usage:
+        web_crawler [-c] [-s] <start urls>
+
+    start_urls:
+        The url from which the crawler should start. Multiple urls can be given
+
+    -c:
+        Only crawl the given urls
+
+    -s:
+        Only scrape the given urls
+    """
+
     try:
-        opts, websites = getopt.getopt(argv,"cs",[])
+        opts, websites = getopt.getopt(argv,"csh",[])
     except getopt.GetoptError:
-        print('web_crawler.py <urls>')
+        print(help_text)
         sys.exit(2)
 
     run_type = "both"
@@ -194,6 +208,8 @@ def main(argv):
               print("Cannot take -c and -s arguments at same time")
               exit(1)
             run_type = "scrape"
+        elif opt == '-h':
+            print(help_text)
 
     if run_type == "both":
         for website in websites:
