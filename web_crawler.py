@@ -4,6 +4,7 @@ from urllib.parse import urlsplit
 import datetime
 import pymongo
 import sys, getopt
+from index import Index
 
 MONGODB_URL = "mongodb://localhost:27017/"
 
@@ -170,9 +171,9 @@ def exportURLs(url_data):
     f.close()
 
 def exportData(website,data):
-    f = open(urlsplit(website).netloc+"_data.json", "w")
-    f.write(json.dumps(data,indent=4))
-    f.close()
+    index = Index()
+    for doc in data:
+	    index.IndexFile(doc)
 
 def main(argv):
     help_text = """
