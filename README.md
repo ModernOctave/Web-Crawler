@@ -14,4 +14,13 @@ It is recommended to use a virtual environment to prevent package conflicts
 A MongoDB must be setup and its url should be assigned to the ```MONGODB_URL``` variable.
 
 ### Usage
-In the main if statement you can set the website variable to the url of the website you wish to crawl. Post this run the ```crawlwebsite``` and ```scrapewebsite``` commands for the website variable as required.
+```web_crawler [-c] [-s] <start urls>```
+
+#### start urls
+The url from which the crawler should start. Multiple urls can be given
+
+#### -c
+Only crawl the given urls
+
+#### -s
+Only scrape the given urls
