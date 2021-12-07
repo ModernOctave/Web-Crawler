@@ -3,11 +3,12 @@ import json
 from urllib.parse import urlsplit
 import datetime
 import pymongo
+import sys, getopt
 
 MONGODB_URL = "mongodb://localhost:27017/"
 
 # Crawl a given website
-def crawlWebsite(url):
+def crawlWebsite(website,url):
     # Crawl starting from given url
     def crawl(url):
         print("Media URLs: "+str(len(media_urls))+"   Crawled Pages: "+str(len(crawled_urls))+"   Crawling: "+url)
@@ -110,7 +111,7 @@ def crawlWebsite(url):
             
 
 # Scrape data from a website
-def scrapeWebsite(url):
+def scrapeWebsite(website,url):
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient["web_crawler"]
     mycol = mydb["url_data"]
@@ -119,7 +120,7 @@ def scrapeWebsite(url):
     myresult = mycol.find(myquery)
 
     for result in myresult:
-        data = scrape(url,result['paths'])
+        data = scrape(website,url,result['paths'])
 
         # Store in MongoDB
         # mycol = mydb["page_data"]
@@ -127,32 +128,39 @@ def scrapeWebsite(url):
         # mycol.update_one(myquery, { "$set": data_entry }, upsert=True)
 
         # Export as json
-        exportData(data)
+        exportData(website,data)
 
 # Scrape data from all paths for a given site
-def scrape(url,paths):
+def scrape(website,url,paths):
     data = []
+    i = 1
+    total = len(paths)
     for path in paths:
         # Open browser
         browser = mechanicalsoup.StatefulBrowser()
 
         # Open page at the path
-        browser.open(url+path)
-        page = browser.page
+        try:
+            browser.open(url+path)
+            print(str(i)+"/"+str(total)+") Scrapping: "+url+path)
+            page = browser.page
 
-        # Get text
-        text = page.get_text()
-        # Separate lines and join
-        lines = list(line.strip() for line in text.splitlines())
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        text = '\n'.join(chunk for chunk in chunks if chunk)
+            # Get text
+            text = page.get_text()
+            # Separate lines and join
+            lines = list(line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            text = '\n'.join(chunk for chunk in chunks if chunk)
 
-        # Add data to array
-        page_data = {
-                "path" : website+path,
-                "data" : text
-            }
-        data.append(page_data)
+            # Add data to array
+            page_data = {
+                    "path" : website+path,
+                    "data" : text
+                }
+            data.append(page_data)
+            i += 1
+        except:
+            print(f"Could not open {website+path}!")
 
     return data
 
@@ -161,12 +169,43 @@ def exportURLs(url_data):
     f.write(json.dumps(url_data,indent=4))
     f.close()
 
-def exportData(data):
-    f = open("data.json", "w")
+def exportData(website,data):
+    f = open(urlsplit(website).netloc+"_data.json", "w")
     f.write(json.dumps(data,indent=4))
     f.close()
 
+def main(argv):
+    try:
+        opts, websites = getopt.getopt(argv,"cs",[])
+    except getopt.GetoptError:
+        print('web_crawler.py <urls>')
+        sys.exit(2)
+
+    run_type = "both"
+
+    for opt, arg in opts:
+        if opt == '-c':
+            if run_type == "scrape":
+              print("Cannot take -c and -s arguments at same time")
+              exit(1)
+            run_type = "crawl"
+        elif opt == '-s':
+            if run_type == "crawl":
+              print("Cannot take -c and -s arguments at same time")
+              exit(1)
+            run_type = "scrape"
+
+    if run_type == "both":
+        for website in websites:
+            crawlWebsite(website,website)
+            scrapeWebsite(website,website)
+    elif run_type == "crawl":
+        for website in websites:
+            crawlWebsite(website,website)
+    elif run_type == "scrape":
+        for website in websites:
+            scrapeWebsite(website,website)
+
+
 if __name__ == '__main__':
-    website = "https://www.iitb.ac.in/"
-    crawlWebsite(website)
-    # scrapeWebsite(website)
+    main(sys.argv[1:])
