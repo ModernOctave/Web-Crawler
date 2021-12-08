@@ -158,15 +158,15 @@ def scrape(url,paths):
 
 def exportURLs(url_data):
     f = open("urls.json", "w", encoding='utf-8')
-    f.write(json.dumps(url_data,indent=4))
+    f.write(json.dumps(url_data,ensure_ascii=False,indent=4))
     f.close()
 
 def exportData(data):
     f = open("data.json", "w", encoding='utf-8')
-    f.write(json.dumps(data,indent=4))
+    f.write(json.dumps(data,ensure_ascii=False,indent=4))
     f.close()
 
 if __name__ == '__main__':
     website = "https://www.iitb.ac.in/"
     crawlWebsite(website)
-    # scrapeWebsite(website)
+    scrapeWebsite(website)
