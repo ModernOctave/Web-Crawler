@@ -164,11 +164,6 @@ def scrape(website,url,paths):
 
     return data
 
-def exportURLs(url_data):
-    f = open("urls.json", "w", encoding='utf-8')
-    f.write(json.dumps(url_data,ensure_ascii=False,indent=4))
-    f.close()
-
 def exportData(website,data):
     f = open(urlsplit(website).netloc+"_data.json", "w", encoding='utf-8')
     f.write(json.dumps(data,ensure_ascii=False,indent=4))
