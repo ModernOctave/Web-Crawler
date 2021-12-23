@@ -22,7 +22,13 @@ class Index:
 			}
 		}
 	}
-	createIndex = esClient.indices.create(index='searchapp', body=mapping, ignore=400) #ignore 400 ignores creation of index if already present
+
+	try:
+		createIndex = esClient.indices.create(index='searchapp', body=mapping, ignore=400) #ignore 400 ignores creation of index if already present
+	except:
+		print('Could not connect to Elastic Search!')
+		exit(1)
+	
 	print(createIndex)
 
 	def IndexFile(self, data):

@@ -107,10 +107,11 @@ class crawler:
         mycol = mydb["url_data"]
 
         myquery = { "url": url }
+        try:
           mycol.update_one(myquery, { "$set": url_data }, upsert=True)   
-
-
-            
+        except:
+          print('Could not connect to MongoDB!')
+          exit(1)
                
     # Scrape data from a website
     def scrapeWebsite(self,website,url):
