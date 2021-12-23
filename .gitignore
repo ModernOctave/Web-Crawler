@@ -1,0 +1,11 @@
+__pycache__
+bin
+include
+lib
+lib64
+share
+
+.vscode
+pyvenv.cfg
+test.py
+*_data.json
